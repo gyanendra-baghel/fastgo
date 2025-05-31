@@ -30,35 +30,36 @@ go get github.com/gyanendra-baghel/fastgo
 package main
 
 import (
-	"github.com/gyanendra-baghel/fastgo"
+	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/gyanendra-baghel/fastgo"
 )
 
 func main() {
 	app := fastgo.New()
+  // request timeout
+	app.Use(fastgo.Timeout(5 * time.Second))
 
-	app.Use(fastgo.Timeout(5 * time.Second)) // Optional timeout middleware
+	router := fastgo.NewRouter()
 
-	router := fastgo.Router()
-
-	router.Get("/", func(ctx *fastgo.Ctx) {
-		ctx.String(http.StatusOK, "Hello, FastGo!")
+	router.Get("/", func(c *fastgo.Ctx) {
+		c.Text(200, "Welcome to FastGo!")
 	})
 
-	router.Get("/users/:id", func(ctx *fastgo.Ctx) {
-		id := ctx.Params["id"]
-		page := ctx.QueryIntOrDefault("page", 1)
-		ctx.JSON(200, map[string]any{
-			"userId": id,
-			"page":   page,
-		})
+	router.Get("/search", func(c *fastgo.Ctx) {
+		q := c.QueryOrDefault("q", "default")
+		c.JSON(200, map[string]string{"query": q})
 	})
 
-	app.Use(router)
+	app.Use(router.ServeHTTP)
 
+	fmt.Println("Listening on http://localhost:3000")
 	http.ListenAndServe(":3000", app)
 }
+
+
 ```
 
 
